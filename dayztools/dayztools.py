@@ -317,7 +317,76 @@ class DayZTools(commands.Cog):
     def checkfeed(self, guild, line):
         if line not in self.killfeed[guild.id]:
             return line
+        
+    # Handles Build feed
+    async def buildfeeder(self, newbuildfeed, guild, settings):
+        blog = guild.get_channel(settings["buildfeed"])
+        blogs = newbuildfeed.split("\n")
+        if guild.id not in self.buildfeed:
+            self.buildfeed[guild.id] = newbuildfeed
+            return
+        else:
+            for line in blogs:
+                if not line:
+                    continue
+                timestamp = str(re.search(r'(..:..:..)', line).group(1))
+                if "Built" in line:
+                    b = self.checkfeed(guild, line)
+                    if b:
+                        player = str(re.search(r'Player "(.*?)"', line).group(1))
+                        coords = str(re.search(r'pos=<(.*?)>', line).group(1))
+                        section = str(re.search(r'Built (.*?)', line).group(1))
+                        placement = str(re.search(r'from (.*?)', line).group(1))
+                        tool = str(re.search(r' with (.*)', line).group(1))
+                        embed = discord.Embed(
+                            title=f"Build | {timestamp}",
+                            description=f"**{player}** built {section} on {placement} with {tool}.",
+                            footer=F"**Location** | {coords}",
+                            color=discord.Colour.dark_green()
+                        )
+                        embed.set_thumbnail(url="https://i.postimg.cc/hGn5dVdd/Fence.png")
+                        await blog.send(embed=embed)
+                        await asyncio.sleep(2)
+                elif "Dismantled" in line:
+                    b = self.checkfeed(guild, line)
+                    if b:
+                        player = str(re.search(r'Player "(.*?)"', line).group(1))
+                        coords = str(re.search(r'pos=<(.*?)>', line).group(1))
+                        section = str(re.search(r'Dismantled (.*?)', line).group(1))
+                        placement = str(re.search(r'from (.*?)', line).group(1))
+                        tool = str(re.search(r' with (.*)', line).group(1))
+                        embed = discord.Embed(
+                            title=f"Dismantle | {timestamp}",
+                            description=f"**{player}** dismantled {section} on {placement} with {tool}.",
+                            ooter=F"**Location** | {coords}",
+                            color=discord.Colour.dark_gold()
+                        )
+                        embed.set_thumbnail(url="https://i.postimg.cc/tJJfgyVv/Shovel.png")
+                        await blog.send(embed=embed)
+                        await asyncio.sleep(2)
+                elif "Placed" in line:
+                    b = self.checkfeed(guild, line)
+                    if b:
+                        player = str(re.search(r'Player "(.*?)"', line).group(1))
+                        coords = str(re.search(r'pos=<(.*?)>', line).group(1))
+                        placed = str(re.search(r'Placed (.*?)', line).group(1))
+                        embed = discord.Embed(
+                            title=f"Placement | {timestamp}",
+                            description=f"**{player}** placed **{placed}**\n: {coords}",
+                            color=discord.Colour.yellow()
+                        )
+                        embed.set_thumbnail(url="https://i.postimg.cc/zBZXWtkk/Barrel-Red.png")
+                        await blog.send(embed=embed)
+                        await asyncio.sleep(2)
+                else:
+                    continue
 
+            self.buildfeed[guild.id] = newbuildfeed
+
+    def checkfeed(self, guild, line):
+        if line not in self.buildfeed[guild.id]:
+            return line
+        
     # Handles player join/leaves
     async def playerlogging(self, newplayerlist, guild, settings):
         plog = guild.get_channel(settings["playerlog"])
